@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import sys
 import time
@@ -6,10 +7,9 @@ import xml.etree.ElementTree as ET
 
 import aiohttp
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import Response
 from loguru import logger
-
 
 # 移除所有默认的处理器
 logger.remove()
@@ -113,9 +113,34 @@ def generate_reply(from_user, to_user, tim, content):
     return reply
 
 
+def verify(
+        signature: str = Query(..., alias="signature"),
+        timestamp: str = Query(..., alias="timestamp"),
+        nonce: str = Query(..., alias="nonce"),
+        echostr: str = Query(..., alias="echostr")
+):
+    """
+    微信服务器验证核心逻辑
+    """
+    tmp_list = sorted([TOKEN, timestamp, nonce])
+    tmp_str = ''.join(tmp_list)
+    hash_code = hashlib.sha1(tmp_str.encode()).hexdigest()
+
+    if hash_code != signature:
+        raise HTTPException(status_code=403, detail="Invalid signature")
+    return echostr
+
+
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
+async def index(
+        request: Request,
+        signature: str = Query(..., alias="signature"),
+        timestamp: str = Query(..., alias="timestamp"),
+        nonce: str = Query(..., alias="nonce"),
+        echostr: str = Query(..., alias="echostr")
+):
+    """微信验证接口入口"""
+    return verify(signature, timestamp, nonce, echostr)
 
 
 @app.post('/')

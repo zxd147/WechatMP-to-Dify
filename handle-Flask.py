@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import sys
 import time
@@ -7,6 +8,7 @@ import xml.etree.ElementTree as ET
 import aiohttp
 from flask import Flask, request, make_response
 from loguru import logger
+
 
 # 移除所有默认的处理器
 logger.remove()
@@ -119,6 +121,31 @@ def generate_reply(from_user, to_user, tim, content):
     </xml>
     """
     return reply
+
+
+def verify():
+    signature = request.args.get('signature', '')
+    timestamp = request.args.get('timestamp', '')
+    nonce = request.args.get('nonce', '')
+    echostr = request.args.get('echostr', '')
+    # 检查参数是否齐全
+    if not all([signature, timestamp, nonce, echostr]):
+        abort(400)
+    # 对 token、timestamp、nonce 进行字典序排序
+    tmp_list = [TOKEN, timestamp, nonce]
+    tmp_list.sort()
+    # 拼接成字符串并进行 sha1 加密
+    tmp_str = ''.join(tmp_list)
+    hash_code = hashlib.sha1(tmp_str.encode('utf-8')).hexdigest()
+    # 检查加密后的字符串是否与 signature 相等
+    if hash_code != signature:
+        abort(403)  # 如果不相等，则返回 403 错误
+    return echostr  # 返回 echostr 参数内容
+
+
+@app.route('/', methods=['GET'])
+def index():
+    return verify()
 
 
 @app.route('/', methods=['POST'])  # 微信后台与服务器默认通过 POST 方法交互
