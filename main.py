@@ -30,11 +30,11 @@ with open('config.json', 'r') as f:
 semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
 api_models = config["api_models"]
 api_model = api_models[config["concurrency"]["model"]]
+
+app = FastAPI()
 # TOKEN = config["auth"].get("token")
 TOKEN = "sk_wechat"
 model = 'deepseek'
-
-app = FastAPI()
 
 
 async def process_message(query):
@@ -130,7 +130,7 @@ def verify(
     微信服务器验证核心逻辑
     """
     # 确保所有参数为字符串（兼容数字型 timestamp）
-    api_logger.info(f"参数类型: signature={type(signature)}, timestamp={type(timestamp)}, nonce={type(nonce)}, echostr={type(echostr)}, "
+    api_logger.debug(f"参数类型: signature={type(signature)}, timestamp={type(timestamp)}, nonce={type(nonce)}, echostr={type(echostr)}, "
                     f"参数: : signature={signature}, timestamp={timestamp}, nonce={nonce}, echostr={echostr}")
     tmp_list = sorted([TOKEN, timestamp, nonce])
     tmp_str = ''.join(tmp_list)
@@ -139,7 +139,7 @@ def verify(
 
     if hash_code != signature:
         raise HTTPException(status_code=403, detail="Invalid signature")
-    api_logger.info(f"success, echostr={type(echostr)}, {echostr}")
+    api_logger.debug(f"success, echostr={type(echostr)}, {echostr}")
     return echostr
 
 
