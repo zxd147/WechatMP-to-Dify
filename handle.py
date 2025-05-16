@@ -156,6 +156,7 @@ def index():
 def wechat_auth():
     # 处理微信服务器推送的消息
     xml_data = request.data  # 这个消息是加过密的，所以不能直接解析成字典
+    api_logger.info(f"微信服务器推送的消息: {xml_data}")
     msg = parse_message(xml_data)
     api_logger.info(msg)  # 查看消息解析是否正确
     # 回复文本消息示例
