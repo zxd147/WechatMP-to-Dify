@@ -91,7 +91,6 @@ async def process_message(query):
         api_logger.debug(logs)
     else:
         if code != -1:
-            code = -1
             if response_data:
                 messages = f"{messages}, ChatGPT response text is empty, response_data: ===\n{response_data}\n==="
         api_logger.error(messages)
@@ -148,12 +147,12 @@ def verify():
 
 
 @app.route('/', methods=['GET'])
-def index():
+async def index():
     return verify()
 
 
 @app.route('/', methods=['POST'])  # 微信后台与服务器默认通过 POST 方法交互
-def wechat_auth():
+async def wechat_auth():
     # 处理微信服务器推送的消息
     xml_data = request.data  # 这个消息是加过密的，所以不能直接解析成字典
     api_logger.info(f"微信服务器推送的消息: {xml_data}")
@@ -161,7 +160,7 @@ def wechat_auth():
     api_logger.info(msg)  # 查看消息解析是否正确
     # 回复文本消息示例
     query = msg['Content']
-    response_content = process_message(query)
+    response_content = await process_message(query)
     # 返回前端
     response_xml = generate_reply(msg['FromUserName'], msg['ToUserName'], int(time.time()), response_content)
     return make_response(response_xml)
