@@ -28,7 +28,7 @@ with open('config.json', 'r') as f:
 semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
 api_models = config["api_models"]
 api_model = api_models[config["concurrency"]["model"]]
-TOKEN = "sk_wechat"
+TOKEN = 'sk_wechat'
 model = 'deepseek'
 
 app = Flask(__name__)
