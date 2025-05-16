@@ -129,6 +129,8 @@ def verify(
     微信服务器验证核心逻辑
     """
     # 确保所有参数为字符串（兼容数字型 timestamp）
+    api_logger.info(f"参数类型: TOKEN={type(TOKEN)}, timestamp={type(timestamp)}, nonce={type(nonce)}, "
+                    f"参数: : TOKEN={TOKEN}, timestamp={timestamp}, nonce={nonce}")
     timestamp = str(timestamp)
     nonce = str(nonce)
     tmp_list = sorted([TOKEN, timestamp, nonce])
