@@ -113,6 +113,11 @@ def generate_reply(from_user, to_user, tim, content):
     return reply
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+
 @app.post('/')
 async def wechat_auth(request: Request):
     # 处理微信服务器推送的消息
