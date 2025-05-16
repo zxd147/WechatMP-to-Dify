@@ -1,0 +1,27 @@
+{
+  "api_param": {
+    "inputs": {},
+    "query": "",
+    "response_mode": "blocking",
+    "conversation_id": "",
+    "user": "abc-123"
+  },
+  "api_models": {
+    "deepseek": {
+      "model": "deepseek-v3",
+      "base_url": "http://172.16.10.25/v1/chat-messages",
+      "api_key": "Bearer app-vTtbF4zPgAHHJvCLOsagL27B"
+    }
+  },
+  "auth": {
+    "token": "sk-wechat"
+  },
+  "header": {
+    "Authorization": "",
+    "Content-Type": "application/json"
+  },
+  "concurrency": {
+    "model": "deepseek",
+    "semaphore_limit": 4
+  }
+}
