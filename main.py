@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import Response
 from loguru import logger
 
+
 # 移除所有默认的处理器
 logger.remove()
 logger.bind()
@@ -166,4 +167,7 @@ async def test():
 
 
 if __name__ == '__main__':
+    timestamp = time.time()
+    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+    print("启动时间:", formatted_time)
     uvicorn.run(app, host="0.0.0.0", port=8000)
