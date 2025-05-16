@@ -17,6 +17,11 @@ log_format = "<g>{time:MM-DD HH:mm:ss}</g> <lvl>{level:<9}</lvl> \n{message}"
 logger.add(sys.stdout, level="INFO", format=log_format, backtrace=True, diagnose=True)
 api_logger = logger
 
+# 在模块加载时打印启动时间
+timestamp = time.time()
+formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+api_logger.info(f"启动时间: {formatted_time}")
+
 with open('config.json', 'r') as f:
     config = json.load(f)
 
