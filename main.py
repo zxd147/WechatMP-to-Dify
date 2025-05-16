@@ -128,6 +128,9 @@ def verify(
     """
     微信服务器验证核心逻辑
     """
+    # 确保所有参数为字符串（兼容数字型 timestamp）
+    timestamp = str(timestamp)
+    nonce = str(nonce)
     tmp_list = sorted([TOKEN, timestamp, nonce])
     tmp_str = ''.join(tmp_list)
     hash_code = hashlib.sha1(tmp_str.encode()).hexdigest()
