@@ -129,11 +129,12 @@ def verify(
     微信服务器验证核心逻辑
     """
     # 确保所有参数为字符串（兼容数字型 timestamp）
-    api_logger.debug(f"参数类型: TOKEN={type(TOKEN)}, timestamp={type(timestamp)}, nonce={type(nonce)}, "
+    api_logger.info(f"参数类型: TOKEN={type(TOKEN)}, timestamp={type(timestamp)}, nonce={type(nonce)}, "
                     f"参数: : TOKEN={TOKEN}, timestamp={timestamp}, nonce={nonce}")
     token = TOKEN.get("token", "")
     tmp_list = sorted([token, timestamp, nonce])
     tmp_str = ''.join(tmp_list)
+    api_logger.info(tmp_str)
     hash_code = hashlib.sha1(tmp_str.encode()).hexdigest()
 
     if hash_code != signature:
