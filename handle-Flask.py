@@ -2,10 +2,9 @@ import hashlib
 
 from flask import Flask, request, abort
 
-TOKEN = 'sk_wechat'
 
 app = Flask(__name__)
-
+TOKEN = 'sk_wechat'
 
 def verify():
     signature = request.args.get('signature', '')
@@ -27,6 +26,7 @@ def verify():
     # 检查加密后的字符串是否与 signature 相等
     if hash_code != signature:
         abort(403)  # 如果不相等，则返回 403 错误
+    print(f"success, echostr={type(echostr)}, {echostr}")
     return echostr  # 返回 echostr 参数内容
 
 
@@ -36,4 +36,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)  # 将后端程序运行在 80 端口
+    app.run(host='0.0.0.0', port=8000)  # 将后端程序运行在 80 端口

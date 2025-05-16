@@ -167,4 +167,4 @@ def wechat_auth():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)  # 将后端程序运行在 80 端口
+    app.run(host='0.0.0.0', port=8000)  # 将后端程序运行在 80 端口
