@@ -1,0 +1,13 @@
+.DS_Store
+Thumbs.db
+
+*.class
+*.o
+__pycache__/
+.idea/
+node_modules/
+vendor/
+
+*.log
+logs/
+
