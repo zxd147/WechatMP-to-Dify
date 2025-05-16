@@ -28,10 +28,103 @@ with open('config.json', 'r') as f:
 semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
 api_models = config["api_models"]
 api_model = api_models[config["concurrency"]["model"]]
-TOKEN = 'sk_wechat'
-model = 'deepseek'
-
 app = Flask(__name__)
+model = 'deepseek'
+TOKEN = 'sk_wechat'
+
+
+async def process_message(query):
+    param = config["api_param"]
+    param["query"] = query
+    headers = config["header"]
+    chat_url = api_model["base_url"]
+    headers["Authorization"] = api_model["api_key"]
+    logs = f"Dify request param: ---\n{json.dumps(param, ensure_ascii=False, indent=None)}\n---"
+    api_logger.debug(logs)
+
+    answer = ''
+    response_data = ''
+    try:
+        async with semaphore:  # 整个函数的执行都受到信号量的控制
+            async with aiohttp.ClientSession() as session:
+                # 准备参数并发起请求
+                async with session.post(chat_url, headers=headers, data=json.dumps(param), timeout=10) as response:
+                    if response.status == 200:
+                        code = 0
+                        messages = 'Dify response session successfully'
+                        if response.content_type == 'application/json':
+                            response_data = await response.json()  # 如果是 JSON，直接解析
+                            answer = response_data.get('answer', '')
+                        elif response.content_type == 'text/event-stream':
+                            encoding = response.charset
+                            async for line in response.content:
+                                json_string = line.decode(encoding).strip().replace('data: ', '')
+                                response_data += json_string + '\n'
+                                if json_string == "[DONE]":
+                                    continue
+                                if json_string:  # 检查内容是否为空
+                                    try:
+                                        # 尝试解析为 JSON 对象
+                                        data = json.loads(json_string)
+                                        # 提取content
+                                        content = data.get('answer', '')
+                                        if content:  # 如果content不为空
+                                            answer += content  # 添加到最终内容中
+                                    except json.JSONDecodeError:
+                                        code = -1
+                                        messages = f"{messages}, JSONDecodeError, Dify Data Invalid JSON: {json_string}."
+                                        api_logger.error(messages)
+                        else:
+                            code = -1
+                            messages = f"{messages}, Unknown response.content_type: {response.content_type}"
+                    else:
+                        code = -1
+                        messages = f'Dify response failed with status code: {response.status}. '
+    except (asyncio.TimeoutError, json.JSONDecodeError, KeyError, Exception) as e:
+        error_type = type(e).__name__
+        code = -1
+        messages = f'{error_type}: {e}'
+    answer = answer[2:].strip() if answer[:2] in ("0:", "1:") else answer
+    # 去除前两个字符
+    if answer != '':
+        logs = f'{messages}, response_data: ===\n{response_data}\n==='
+        api_logger.debug(logs)
+    else:
+        if code != -1:
+            code = -1
+            if response_data:
+                messages = f"{messages}, ChatGPT response text is empty, response_data: ===\n{response_data}\n==="
+        api_logger.error(messages)
+    return answer
+
+
+async def test():
+    query = "你好"
+    answer = await process_message(query)
+    print(answer)
+
+
+def parse_message(xml):
+    """解析微信服务器发来的消息"""
+    root = ET.fromstring(xml)
+    msg = {}
+    for child in root:
+        msg[child.tag] = child.text
+    return msg
+
+
+def generate_reply(from_user, to_user, tim, content):
+    """生成回复消息的XML格式"""
+    reply = f"""
+    <xml>
+      <ToUserName><![CDATA[{from_user}]]></ToUserName>
+      <FromUserName><![CDATA[{to_user}]]></FromUserName>
+      <CreateTime>{tim}</CreateTime>
+      <MsgType><![CDATA[text]]></MsgType>
+      <Content><![CDATA[{content}]]></Content>
+    </xml>
+    """
+    return reply
 
 
 def verify():
@@ -57,6 +150,20 @@ def verify():
 @app.route('/', methods=['GET'])
 def index():
     return verify()
+
+
+@app.route('/', methods=['POST'])  # 微信后台与服务器默认通过 POST 方法交互
+def wechat_auth():
+    # 处理微信服务器推送的消息
+    xml_data = request.data  # 这个消息是加过密的，所以不能直接解析成字典
+    msg = parse_message(xml_data)
+    api_logger.info(msg)  # 查看消息解析是否正确
+    # 回复文本消息示例
+    query = msg['Content']
+    response_content = process_message(query)
+    # 返回前端
+    response_xml = generate_reply(msg['FromUserName'], msg['ToUserName'], int(time.time()), response_content)
+    return make_response(response_xml)
 
 
 if __name__ == '__main__':
