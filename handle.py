@@ -158,15 +158,14 @@ async def wechat_auth():
     xml_data = request.data  # 这个消息是加过密的，所以不能直接解析成字典
     api_logger.debug(f"微信服务器推送的消息: {xml_data}")
     msg = parse_message(xml_data)
-    api_logger.info(msg)  # 查看消息解析是否正确
+    api_logger.info(f'Request: {msg}')  # 查看消息解析是否正确
     # 回复文本消息示例
     query = msg['Content']
-    # response_content = query
     response_content = await process_message(query)
-
+    api_logger.info(f'Response: {response_content}')  # 查看消息解析是否正确
     # 返回前端
     response_xml = generate_reply(msg['FromUserName'], msg['ToUserName'], int(time.time()), response_content)
-    api_logger.info(response_xml)
+    api_logger.debug(response_xml)
     return make_response(response_xml)
 
 
