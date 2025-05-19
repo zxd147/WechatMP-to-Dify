@@ -23,18 +23,16 @@ api_logger = logger
 timestamp = time.time()
 formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
 api_logger.info(f"启动时间: {formatted_time}")
-
 with open('config.json', 'r') as f:
     config = json.load(f)
 
 semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
 api_models = config["api_models"]
 api_model = api_models[config["concurrency"]["model"]]
+model = 'deepseek'
+TOKEN = config["auth"].get("token")
 
 app = FastAPI()
-# TOKEN = config["auth"].get("token")
-TOKEN = "sk_wechat"
-model = 'deepseek'
 
 
 async def process_message(query):
@@ -120,19 +118,18 @@ def generate_reply(from_user, to_user, tim, content):
     return reply
 
 
-def verify(
-        signature: str = Query(..., alias="signature"),
-        timestamp: str = Query(..., alias="timestamp"),
-        nonce: str = Query(..., alias="nonce"),
-        echostr: str = Query(..., alias="echostr")
-):
+def verify(signature, timestamp, nonce, echostr):
     """
     微信服务器验证核心逻辑
     """
-    # 确保所有参数为字符串（兼容数字型 timestamp）
     api_logger.debug(f"参数类型: signature={type(signature)}, timestamp={type(timestamp)}, nonce={type(nonce)}, echostr={type(echostr)}, "
                     f"参数: : signature={signature}, timestamp={timestamp}, nonce={nonce}, echostr={echostr}")
-    tmp_list = sorted([TOKEN, timestamp, nonce])
+    if not all([signature, timestamp, nonce, echostr]):
+        raise HTTPException(status_code=400, detail="missing param")
+    # 对 token、timestamp、nonce 进行字典序排序
+    tmp_list = [TOKEN, timestamp, nonce]
+    tmp_list.sort()
+    # 拼接成字符串并进行 sha1 加密
     tmp_str = ''.join(tmp_list)
     api_logger.info(tmp_str)
     hash_code = hashlib.sha1(tmp_str.encode()).hexdigest()
@@ -149,7 +146,7 @@ async def index(
         signature: str = Query(..., alias="signature"),
         timestamp: str = Query(..., alias="timestamp"),
         nonce: str = Query(..., alias="nonce"),
-        echostr: str = Query(..., alias="echostr")
+        echostr: int = Query(..., alias="echostr")
 ):
     """微信验证接口入口"""
     return verify(signature, timestamp, nonce, echostr)

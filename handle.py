@@ -21,16 +21,16 @@ api_logger = logger
 timestamp = time.time()
 formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
 api_logger.info(f"启动时间: {formatted_time}")
-
 with open('config.json', 'r') as f:
     config = json.load(f)
 
 semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
 api_models = config["api_models"]
 api_model = api_models[config["concurrency"]["model"]]
-app = Flask(__name__)
 model = 'deepseek'
-TOKEN = 'sk_wechat'
+TOKEN = config["auth"].get("token")
+
+app = Flask(__name__)
 
 
 async def process_message(query):
@@ -139,6 +139,7 @@ def verify():
     tmp_list.sort()
     # 拼接成字符串并进行 sha1 加密
     tmp_str = ''.join(tmp_list)
+    api_logger.info(tmp_str)
     hash_code = hashlib.sha1(tmp_str.encode('utf-8')).hexdigest()
     # 检查加密后的字符串是否与 signature 相等
     if hash_code != signature:
@@ -155,14 +156,17 @@ async def index():
 async def wechat_auth():
     # 处理微信服务器推送的消息
     xml_data = request.data  # 这个消息是加过密的，所以不能直接解析成字典
-    api_logger.info(f"微信服务器推送的消息: {xml_data}")
+    api_logger.debug(f"微信服务器推送的消息: {xml_data}")
     msg = parse_message(xml_data)
     api_logger.info(msg)  # 查看消息解析是否正确
     # 回复文本消息示例
     query = msg['Content']
+    # response_content = query
     response_content = await process_message(query)
+
     # 返回前端
     response_xml = generate_reply(msg['FromUserName'], msg['ToUserName'], int(time.time()), response_content)
+    api_logger.info(response_xml)
     return make_response(response_xml)
 
 
