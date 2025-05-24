@@ -20,27 +20,30 @@ logger.add(sys.stdout, level="INFO", format=log_format, backtrace=True, diagnose
 api_logger = logger
 
 # 在模块加载时打印启动时间
-timestamp = time.time()
-formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+ts = time.time()
+formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
 api_logger.info(f"启动时间: {formatted_time}")
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-semaphore = asyncio.Semaphore(config["concurrency"]["semaphore_limit"])
-api_models = config["api_models"]
-api_model = api_models[config["concurrency"]["model"]]
-model = 'deepseek'
-TOKEN = config["auth"].get("token")
+host = config["host"]
+port = config["port"]
+model = config["model"]
+semaphore = asyncio.Semaphore(config["semaphore_limit"])
+llm_param = config["llm_param"]
+llm_models = config["llm_models"]
+llm_model = llm_models[model]
+token = config["auth"].get("token")
 
 app = FastAPI()
 
 
 async def process_message(query):
-    param = config["api_param"]
+    param = llm_param
     param["query"] = query
     headers = config["header"]
-    chat_url = api_model["base_url"]
-    headers["Authorization"] = api_model["api_key"]
+    chat_url = llm_model["base_url"]
+    headers["Authorization"] = llm_model["api_key"]
     logs = f"Dify request param: ---\n{json.dumps(param, ensure_ascii=False, indent=None)}\n---"
     api_logger.debug(logs)
 
@@ -127,7 +130,7 @@ def verify(signature, timestamp, nonce, echostr):
     if not all([signature, timestamp, nonce, echostr]):
         raise HTTPException(status_code=400, detail="missing param")
     # 对 token、timestamp、nonce 进行字典序排序
-    tmp_list = [TOKEN, timestamp, nonce]
+    tmp_list = [token, timestamp, nonce]
     tmp_list.sort()
     # 拼接成字符串并进行 sha1 加密
     tmp_str = ''.join(tmp_list)
@@ -140,8 +143,8 @@ def verify(signature, timestamp, nonce, echostr):
     return echostr
 
 
-@app.get("/")
-async def index(
+@app.get("/api/v1/wechat_mp")
+async def wechat_auth(
         request: Request,
         signature: str = Query(..., alias="signature"),
         timestamp: str = Query(..., alias="timestamp"),
@@ -152,8 +155,8 @@ async def index(
     return verify(signature, timestamp, nonce, echostr)
 
 
-@app.post('/')
-async def wechat_auth(request: Request):
+@app.post('/api/v1/wechat_mp')
+async def wechat_mp(request: Request):
     # 处理微信服务器推送的消息
     xml_data = await request.body()
     msg = parse_message(xml_data)
@@ -174,4 +177,4 @@ async def test():
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=host, port=port)

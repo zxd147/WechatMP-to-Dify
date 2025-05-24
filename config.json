@@ -1,12 +1,16 @@
 {
-  "api_param": {
+  "host": "0.0.0.0",
+  "port": 80,
+  "model": "deepseek",
+  "semaphore_limit": 4,
+  "llm_param": {
     "inputs": {},
     "query": "",
     "response_mode": "blocking",
     "conversation_id": "",
     "user": "abc-123"
   },
-  "api_models": {
+  "llm_models": {
     "deepseek": {
       "model": "deepseek-v3",
       "base_url": "http://172.16.10.25/v1/chat-messages",
@@ -17,11 +21,7 @@
     "token": "sk_wechat"
   },
   "header": {
-    "Authorization": "",
+    "Authorization": "sk_xxx",
     "Content-Type": "application/json"
-  },
-  "concurrency": {
-    "model": "deepseek",
-    "semaphore_limit": 4
   }
 }
