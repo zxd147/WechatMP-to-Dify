@@ -18,7 +18,7 @@
     }
   },
   "auth": {
-    "token": "sk_wechat"
+    "token": "sk_wechat—mp"
   },
   "header": {
     "Authorization": "sk_xxx",
