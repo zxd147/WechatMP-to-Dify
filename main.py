@@ -4,6 +4,8 @@ import json
 import sys
 import time
 import xml.etree.ElementTree as ET
+from fastapi.responses import Response, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 import aiohttp
 import uvicorn
@@ -142,6 +144,12 @@ def verify(signature, timestamp, nonce, echostr):
     api_logger.debug(f"success, echostr={type(echostr)}, {echostr}")
     return echostr
 
+# 注册API路由
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/favicon.ico", headers={"Cache-Control": "public, max-age=3600"})
 
 @app.get("/api/v1/wechat_mp")
 async def wechat_auth(

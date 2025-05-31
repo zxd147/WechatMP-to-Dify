@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统状态</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .card {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .progress-bar {
+            height: 20px;
+            border-radius: 5px;
+            background-color: #ccc;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+        }
+        .gpu-card {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .gpu-card h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>系统状态</h1>
+    <div class="container">
+        <div class="card">
+            <h2>CPU 状态</h2>
+            <div>CPU 使用率: <span id="cpu-percent">--</span>%</div>
+            <div class="progress-bar">
+                <div class="progress" id="cpu-progress"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>内存状态</h2>
+            <div>总内存: <span id="memory-total">--</span></div>
+            <div>已用内存: <span id="memory-used">--</span></div>
+            <div>可用内存: <span id="memory-available">--</span></div>
+            <div>内存使用率: <span id="memory-percent">--</span>%</div>
+            <div class="progress-bar">
+                <div class="progress" id="memory-progress"></div>
+            </div>
+        </div>
+
+        <div class="card" id="gpu-info-container">
+            <h2>GPU 状态</h2>
+        </div>
+    </div>
+
+    <script>
+        async function fetchmonitor() {
+            const response = await fetch('/monitor');
+            const data = await response.json();
+
+            // Update CPU data
+            document.getElementById('cpu-percent').textContent = data.cpu_percent;
+            document.getElementById('cpu-progress').style.width = `${data.cpu_percent}%`;
+
+            // Update memory data
+            document.getElementById('memory-total').textContent = data.memory_total;
+            document.getElementById('memory-used').textContent = data.memory_used;
+            document.getElementById('memory-available').textContent = data.memory_available;
+            document.getElementById('memory-percent').textContent = data.memory_percent;
+            document.getElementById('memory-progress').style.width = `${data.memory_percent}%`;
+
+            // Update GPU data
+            const gpuContainer = document.getElementById('gpu-info-container');
+            gpuContainer.innerHTML = ''; // 清空之前的 GPU 信息
+            data.gpu.forEach(gpu => {
+                const gpuCard = document.createElement('div');
+                gpuCard.className = 'gpu-card';
+                gpuCard.innerHTML = `
+                    <h3>GPU ${gpu.gpu_id}</h3>
+                    <div>GPU 负载: ${gpu.gpu_load}</div>
+                    <div>总内存: ${gpu.gpu_memory.total_GB}</div>
+                    <div>已用内存: ${gpu.gpu_memory.used}</div>
+                    <div>空闲内存: ${gpu.gpu_memory.free}</div>
+                `;
+                gpuContainer.appendChild(gpuCard);
+            });
+        }
+
+        // Fetch monitor on load
+        window.onload = fetchmonitor;
+
+        // Refresh every 1 seconds
+        setInterval(fetchmonitor, 1000);
+    </script>
+</body>
+</html>
