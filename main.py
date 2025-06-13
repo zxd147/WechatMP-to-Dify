@@ -4,15 +4,14 @@ import json
 import sys
 import time
 import xml.etree.ElementTree as ET
-from fastapi.responses import Response, FileResponse
-from fastapi.staticfiles import StaticFiles
 
 import aiohttp
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException, Query
+from fastapi.responses import FileResponse
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
-
 
 # 移除所有默认的处理器
 logger.remove()
@@ -160,7 +159,8 @@ async def wechat_auth(
         echostr: int = Query(..., alias="echostr")
 ):
     """微信验证接口入口"""
-    return verify(signature, timestamp, nonce, echostr)
+    echostr = verify(signature, timestamp, nonce, echostr)
+    return echostr
 
 
 @app.post('/api/v1/wechat_mp')
