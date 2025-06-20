@@ -4,11 +4,13 @@ import json
 import sys
 import time
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 import aiohttp
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
@@ -145,6 +147,14 @@ def verify(signature, timestamp, nonce, echostr):
 
 # 注册API路由
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+@app.api_route("/", methods=["GET", "POST"])
+async def health():
+    """index."""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    health_data = {"service": "WechatMP-to-Dify", "status": "running", "timestamp": timestamp}
+    # 返回JSON格式的响应
+    return JSONResponse(content=health_data, status_code=200)
 
 @app.get("/favicon.ico")
 async def favicon():
