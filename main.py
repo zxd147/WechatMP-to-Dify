@@ -150,7 +150,7 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 async def favicon():
     return FileResponse("static/favicon.ico", headers={"Cache-Control": "public, max-age=3600"})
 
-@app.get("/api/v1/wechat_mp")
+@app.get("/api/v1/wechatmp/dify")
 async def wechat_auth(
         request: Request,
         signature: str = Query(..., alias="signature"),
@@ -163,8 +163,8 @@ async def wechat_auth(
     return echostr
 
 
-@app.post('/api/v1/wechat_mp')
-async def wechat_mp(request: Request):
+@app.post('/api/v1/wechatmp/dify')
+async def wechatmp_chat(request: Request):
     # 处理微信服务器推送的消息
     xml_data = await request.body()
     msg = parse_message(xml_data)
