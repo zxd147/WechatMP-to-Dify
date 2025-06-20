@@ -161,8 +161,8 @@ async def health():
 async def favicon():
     return FileResponse("static/favicon.ico", headers={"Cache-Control": "public, max-age=3600"})
 
-@app.get("/api/v1/wechatmp/dify")
-async def wechat_auth(
+@app.get("/api/v1/wechat_mp/dify")
+async def wechat_mp_auth(
         request: Request,
         signature: str = Query(..., alias="signature"),
         timestamp: str = Query(..., alias="timestamp"),
@@ -174,8 +174,8 @@ async def wechat_auth(
     return echostr
 
 
-@app.post('/api/v1/wechatmp/dify')
-async def wechatmp_chat(request: Request):
+@app.post('/api/v1/wechat_mp/dify')
+async def wechat_mp_chat(request: Request):
     # 处理微信服务器推送的消息
     xml_data = await request.body()
     msg = parse_message(xml_data)
