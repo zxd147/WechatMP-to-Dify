@@ -149,6 +149,7 @@ def verify(signature, timestamp, nonce, echostr):
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 @app.api_route("/", methods=["GET", "POST"])
+@app.api_route("/health", methods=["GET", "POST"])
 async def health():
     """index."""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
